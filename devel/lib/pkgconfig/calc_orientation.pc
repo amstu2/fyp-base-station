@@ -1,0 +1,8 @@
+prefix=/home/andrew/catkin_ws/devel
+
+Name: calc_orientation
+Description: Description of calc_orientation
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/andrew/catkin_ws/devel/lib 
+Requires: 
