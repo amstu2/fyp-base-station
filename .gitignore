@@ -1,3 +1,5 @@
 build/
 .vscode/
 .catkin_workspace
+src/core_rover/
+src/beginner_tutorials

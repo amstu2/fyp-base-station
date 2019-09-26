@@ -94,3 +94,5 @@ done
 unset _i
 
 unset _CATKIN_ENVIRONMENT_HOOKS_COUNT
+export ROS_IP=192.168.1.200
+export ROS_MASTER_URI=http://192.168.1.200:11311
