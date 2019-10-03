@@ -1,60 +1,61 @@
 #!/usr/bin/env python
 
-import rospy
-from  std_msgs.msg import Float64MultiArray
+#import rospy
+import math
+#from  sensor_msgs.msg import NavSatFix
 
-class Tracker:
-    def __init__(self, latitude = 0.00, longitude = 0.00):
-        self.latitude = latitude
-        self.longitude = longitude
-        self.position_is_locked = False
-        self.LOCK_LIMIT = 60 
-        self.lock_count = 0
 
-    def resetLockCount(self):
-        self.lock_count = 0
-
-    def printGPSCoordinates(self):
-        rospy.loginfo("\r\nAntenna Latitude: " + str(self.latitude) + "\r\nAntennna Longitude: " + str(self.longitude))
-
-class Vehicle:
-    def __init__(self, latitude = 0.00, longitude = 0.00):
+class Entity:
+    def __init__(self, name = 'Untitled', latitude = 0.00, longitude = 0.00):
+        self.name = name
         self.latitude = latitude
         self.longitude = longitude
 
+    def ROSLogGPSCoordinates(self):
+        rospy.loginfo("\r\n" + self.name + " GPS Coordinates: \r\nLatitude: " + str(self.latitude) + "\r\nLongitude: " + str(self.longitude))
+    
     def printGPSCoordinates(self):
-        rospy.loginfo("\r\nVehicle Latitude: " + str(self.latitude) + "\r\nVehicle Longitude: " + str(self.longitude))
+        print("\r\n" + self.name + " GPS Coordinates: \r\nLatitude: " + str(self.latitude) + "\r\nLongitude: " + str(self.longitude))
+
+    def setGPSCoordinates(self, latitude, longitude):
+        self.latitude = latitude
+        self.longitude = longitude
+        
+    def getBearingToEntity(self, external_entity):
+        y = math.sin(external_entity.longitude - self.longitude) * math.cos(external_entity.latitude)
+        x = math.cos(self.latitude)*math.sin(external_entity.latitude) - math.sin(self.latitude)*math.cos(external_entity.latitude)*math.cos(external_entity.longitude-self.longitude)
+        bearing = math.degrees(math.atan2(y, x))
+        return bearing
+
+    def getBearingToEntity2(self, extern_entity_lat, extern_entity_long):
+        y = math.sin(extern_entity_long - self.longitude) * math.cos(extern_entity_lat)
+        x = math.cos(self.latitude)*math.sin(extern_entity_lat) - math.sin(self.latitude)*math.cos(extern_entity_lat)*math.cos(extern_entity_long-self.longitude)
+        bearing = math.degrees(math.atan2(y, x))
+        return bearing
+
+
+        
+def calculateAntennaBearing():
+    antenna.getBearingToEntity(rover)
 
 def antGPSCallback(data):
-    latitude_new = data.data[0]
-    longitude_new = data.data[1]
-    if((latitude_new == antenna.latitude) and (longitude_new == antenna.longitude)):
-        antenna.lock_count += 1
-        if(antenna.lock_count == antenna.LOCK_LIMIT):
-            antenna.position_is_locked = True
-            rospy.loginfo('Antenna position locked')
-    else:
-        antenna.resetLockCount
-        antenna.latitude = latitude_new
-        antenna.longitude = longitude_new
-        rospy.loginfo('New antenna GPS coordinates established: ' + str(antenna.latitude) + ' ' + str(antenna.longitude))
+    rover.latitude = data.latitude
+    rover.longitude = data.longitude
 
 
 def roverGPSCallback(data):
-    rover.latitude = data.data[0]
-    rover.longitude = data.data[1]
-    rospy.loginfo('test')
-    rover.printGPSCoordinates()
+    rover.latitude = data.latitude
+    rover.longitude = data.longitude
 
 def calculateAntennaOrientation():
-    rospy.Subscriber('ant_gps', Float64MultiArray, antGPSCallback)
-    rospy.Subscriber('rover_gps', Float64MultiArray, roverGPSCallback)
+    rospy.Subscriber('ant_gps', NavSatFix, antGPSCallback)
+    rospy.Subscriber('rover_gps', NavSatFix, roverGPSCallback)
     rospy.init_node('ant_orient', anonymous=True)
-    rospy.loginfo(str(antenna.latitude))
     rospy.spin()
 
-antenna = Tracker()
-rover = Vehicle()
+antenna = Entity('Antenna',-37.937804, 145.013067)
+rover = Entity('Rover',-37.936482, 145.014253)
+
 if __name__ == '__main__':
     try:
         calculateAntennaOrientation()
